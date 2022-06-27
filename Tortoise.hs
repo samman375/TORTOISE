@@ -12,18 +12,17 @@ import Test.QuickCheck
 data Freq = Freq Int deriving (Show, Eq, Ord)
 data Interval = Interval Int deriving (Eq, Ord)
 
--- instance (Interval a) => Show a where
 instance Show Interval where
   show a = show (startPoint a) ++ " to " ++ show (endPoint a)
 
 type Count = Integer
-data Histogram = Histogram [(Interval, Count)] deriving (Show, Eq) -- removed Show instance
+data Histogram = Histogram [(Interval, Count)] deriving (Show, Eq)
 
 data SigCard = SigCard
   { refHistogram :: Histogram
   , excluded :: [Interval]
   }
-  deriving (Show, Eq) -- removed Show instance
+  deriving (Show, Eq)
 
 data Verdict = RealWeapon | Dud deriving (Show, Eq)
 
@@ -71,32 +70,31 @@ prop_inIntervalOf :: Freq -> Bool
 prop_inIntervalOf x = x `inside` (intervalOf x)
 
 prop_inOneInterval :: Freq -> Interval -> Property
--- prop_inOneInterval x y = Interval z != y => not
 prop_inOneInterval x y = y /= intervalOf x ==> x `inside` y == False
 
 -- Problem 2
 
--- every interval occur only once
--- interval not included if count <= 0
--- intervals sorted
 histogram :: [(Interval, Count)] -> Histogram
 histogram xs = Histogram $ sortIntervals $ removeDups $ removeNones xs
  where
+  sortIntervals ys = sortBy (compare `on` fst) ys
   removeNones ys = filter (\t -> (snd t) > 0) ys
   removeDups ys = nubFst ys
    where
     nubFst [] = []
     nubFst (x : xs) = x : nubFst (filter (\t -> (fst t) /= (fst x)) xs)
-  sortIntervals ys = sortBy (compare `on` snd) ys
 
+-- every interval occur at most once
 prop_histogram1 :: Histogram -> Bool
-prop_histogram1 = notImpl "prop_histogram1"
+prop_histogram1 (Histogram xs) = length xs == length (nub $ map fst xs)
 
+-- interval not included if count <= 0
 prop_histogram2 :: Histogram -> Bool
-prop_histogram2 = notImpl "prop_histogram2"
+prop_histogram2 (Histogram xs) = all (\t -> (snd t) > 0) xs
 
+-- intervals sorted
 prop_histogram3 :: Histogram -> Bool
-prop_histogram3 = notImpl "prop_histogram3"
+prop_histogram3 (Histogram xs) = sort (map fst xs) == map fst xs
 
 -- Problem 3
 
