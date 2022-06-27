@@ -98,8 +98,25 @@ prop_histogram3 (Histogram xs) = sort (map fst xs) == map fst xs
 
 -- Problem 3
 
+-- intervalOf
+-- add interval to list or increase count of interval
+-- convert to histogram
 process :: [Freq] -> Histogram
-process = notImpl "process"
+process xs = undefined
+
+--   histogram $ (foldr incrInterval (freqsToIntervals xs) [])
+--  where
+--   freqsToIntervals :: [Freq] -> [Interval]
+--   freqsToIntervals fs = map intervalOf fs
+
+--   -- map incrInterval (freqsToIntervals xs) incrInterval
+--   -- foldr incrInterval [] (freqsToIntervals xs)
+
+--   -- Given an interval and list if interval in list then incr, else add to list
+--   incrInterval :: Interval -> [(Interval, Count)] -> [(Interval, Count)]
+--   incrInterval i list
+--     | i `elem` (map fst list) = map (\x -> if fst x == i then inc (snd x) else x) list
+--     | otherwise = list ++ (i, Count 1)
 
 merge :: Histogram -> Histogram -> Histogram
 merge = notImpl "merge"
