@@ -31,7 +31,7 @@ instance Arbitrary Freq where
   arbitrary = freq <$> arbitrary
 
 instance Arbitrary Interval where
-  -- arbitrary = interval <$> (arbitrary :: Gen (Large Int))
+  -- arbitrary = interval <$> (arbitrary :: Gen (Large Int)) -- Large 3141
   arbitrary = interval <$> arbitrary
 
 instance Arbitrary Histogram where
@@ -81,8 +81,8 @@ histogram xs = Histogram $ sortIntervals $ removeDups $ removeNones xs
   removeNones ys = filter (\t -> (snd t) > 0) ys
   removeDups ys = nubFst ys
    where
-    nubFst [] = []
-    nubFst (x : xs) = x : nubFst (filter (\t -> (fst t) /= (fst x)) xs)
+    nubFst []       = []
+    nubFst (x : xs) = x : nubFst (filter (\t -> (fst t) /= (fst x)) xs) -- check this
 
 -- every interval occur at most once
 prop_histogram1 :: Histogram -> Bool
@@ -102,7 +102,19 @@ prop_histogram3 (Histogram xs) = sort (map fst xs) == map fst xs
 -- add interval to list or increase count of interval
 -- convert to histogram
 process :: [Freq] -> Histogram
-process xs = undefined
+process xs = histogram (map (\a -> incrInterval a l) intervals)
+ where
+  l = []
+  intervals = map intervalOf xs
+  -- group + length
+
+  -- add interval to on-going list
+  incrInterval :: Interval -> [(Interval, Count)] -> [(Interval, Count)]
+  incrInterval i list
+    | (length list) == 0 || i `elem` (map fst list) = map (\x -> if fst x == i then (\a -> a + 1) (snd x) else x) list
+    | otherwise = list ++ [(i, 1)]
+
+-- Attempt 1:
 
 --   histogram $ (foldr incrInterval (freqsToIntervals xs) [])
 --  where
