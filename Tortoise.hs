@@ -57,6 +57,9 @@ interval n = Interval (abs n)
 extractFreq :: Freq -> Int
 extractFreq (Freq n) = n
 
+deconstructHist :: Histogram -> [(Interval, Count)]
+deconstructHist (Histogram h) = h
+
 -- ASSIGNMENT STARTS HERE --
 
 -- Problem 1
@@ -85,7 +88,6 @@ histogram xs = Histogram $ sortIntervals $ removeDups $ removeNones xs
   removeDups []       = []
   removeDups (x : xs) = x : removeDups (filter (\t -> (fst t) /= (fst x)) xs)
 
-
 -- every interval occur at most once
 prop_histogram1 :: Histogram -> Bool
 prop_histogram1 (Histogram xs) = length xs == length (nub $ map fst xs)
@@ -109,7 +111,6 @@ process xs = histogram $ countIntervals $ groupIntervals xs
 merge :: Histogram -> Histogram -> Histogram
 merge xs ys = histogram $ map combineIntervals $ groupByInterval $ sortIntervals $ combineHists xs ys
  where
-  deconstructHist (Histogram h) = h
   combineHists g h = ((deconstructHist g) ++ (deconstructHist h))
   sortIntervals = sortBy (compare `on` fst)
   groupByInterval = groupBy (\a b -> fst a == fst b)
@@ -124,6 +125,9 @@ prop_mergeId g = merge g mempty == g
 prop_mergeComm :: Histogram -> Histogram -> Bool
 prop_mergeComm g h = merge g h == merge h g
 
+prop_mergeGiven :: [Freq] -> [Freq] -> Bool
+prop_mergeGiven xs ys = merge (process xs) (process ys) == process (xs ++ ys)
+
 instance Semigroup Histogram where
   (<>) = merge
 instance Monoid Histogram where
@@ -132,8 +136,19 @@ instance Monoid Histogram where
 
 -- Problem 4
 
--- eucDistance :: Histogram -> Histogram -> Float
--- eucDistance g h = 
+eucDistance :: Histogram -> Histogram -> Float
+eucDistance g h = undefined
+ where
+  allIntervals a b = nub $ sort $ map (\xs -> fst xs) (deconstructHist a ++ deconstructHist b)
+  -- [Interval] -> Histogram -> Histogram -> [Int]
+  getDistances xs g h = map (\i -> countDifference i g h) xs
+  -- [Int] -> Float
+  calcDistance xs = sqrt (sum $ map (^2) xs)
+  -- take list of intervals, take count for interv from hist 1 (else 0), take count for interv from hist 2 (else 0)
+  countDifference i g h = (getCount i g) - (getCount i h)
+  getCount i h 
+    | i `elem` (map fst h) = snd $ (h !! (elemIndex i (map fst h)))
+    | otherwise = 0
 
 report_refl :: Maybe Histogram
 report_refl = notImpl "report_refl"
