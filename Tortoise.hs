@@ -137,27 +137,47 @@ instance Monoid Histogram where
 -- Problem 4
 
 eucDistance :: Histogram -> Histogram -> Float
-eucDistance g h = undefined
+eucDistance g h = calcDistance $ getDistances (allIntervals g h) g h
  where
+  allIntervals :: Histogram -> Histogram -> [Interval]
   allIntervals a b = nub $ sort $ map (\xs -> fst xs) (deconstructHist a ++ deconstructHist b)
-  -- [Interval] -> Histogram -> Histogram -> [Int]
-  getDistances xs g h = map (\i -> countDifference i g h) xs
-  -- [Int] -> Float
-  calcDistance xs = sqrt (sum $ map (^2) xs)
-  -- take list of intervals, take count for interv from hist 1 (else 0), take count for interv from hist 2 (else 0)
-  countDifference i g h = (getCount i g) - (getCount i h)
-  getCount i h 
-    | i `elem` (map fst h) = snd $ (h !! (elemIndex i (map fst h)))
-    | otherwise = 0
+  getDistances :: [Interval] -> Histogram -> Histogram -> [Int]
+  getDistances xs a b = map (\i -> countDifference i a b) xs
+   where
+    countDifference :: Interval -> Histogram -> Histogram -> Int
+    countDifference i a b = (getCount i (deconstructHist a)) - (getCount i (deconstructHist b))
+    getCount :: Interval -> [(Interval, Count)] -> Int
+    getCount i []         = 0
+    getCount i ((a,x):xs) = if a == i then fromIntegral x else getCount i xs
+  calcDistance :: [Int] -> Float
+  calcDistance xs = sqrt $ fromIntegral (sum $ map (^2) xs)
+
+testHistogram1 :: Histogram
+testHistogram1 = (histogram [(interval 1, 5), (interval 2, 4)])
+
+testHistogram2 :: Histogram
+testHistogram2 = (histogram [(interval 1, 2)])
+
+eucTest :: Bool
+eucTest = eucDistance testHistogram1 testHistogram2 == 5
+
+prop_refl :: Histogram -> Bool
+prop_refl g = eucDistance g g == eucDistance g g
+
+prop_symm :: Histogram -> Histogram -> Bool
+prop_symm g h = eucDistance g h == eucDistance h g
+
+prop_tran :: Histogram -> Histogram -> Histogram -> Property
+prop_tran a b c = eucDistance a b == eucDistance b c ==> eucDistance a c == eucDistance a b
 
 report_refl :: Maybe Histogram
-report_refl = notImpl "report_refl"
+report_refl = Nothing
 
 report_symm :: Maybe (Histogram, Histogram)
-report_symm = notImpl "report_symm"
+report_symm = Nothing
 
 report_tran :: Maybe (Histogram, Histogram, Histogram)
-report_tran = notImpl "report_tran"
+report_tran = Just (histogram [], histogram [(interval 1, 1)], histogram [])
 
 -- Inspector O'Hare implemented match as follows:
 match :: Histogram -> SigCard -> Verdict
@@ -188,5 +208,4 @@ refCard = SigCard (histogram r) v
   v = [Interval 5]
 
 falsePos :: Histogram
-falsePos = notImpl "falsePos"
--- int overflow
+falsePos = histogram [(Interval 4, 3000), (Interval 5, 60000000000000), (Interval 6, 300)]
