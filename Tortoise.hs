@@ -171,7 +171,7 @@ prop_symm :: Histogram -> Histogram -> Bool
 prop_symm g h = eucDistance g h == eucDistance h g
 
 prop_tran :: Histogram -> Histogram -> Histogram -> Property
-prop_tran a b c = eucDistance a b == eucDistance b c ==> eucDistance a c == eucDistance a b
+prop_tran a b c = eucDistance a b < 32 && eucDistance b c < 32 ==> eucDistance a c < 32
 
 report_refl :: Maybe Histogram
 report_refl = Nothing
@@ -180,7 +180,7 @@ report_symm :: Maybe (Histogram, Histogram)
 report_symm = Nothing
 
 report_tran :: Maybe (Histogram, Histogram, Histogram)
-report_tran = Just (histogram [], histogram [(interval 1, 1)], histogram [])
+report_tran = Just (histogram [(interval 1,10),(interval 2,18)], histogram [], histogram [(interval 3,4),(interval 5,4),(interval 12,19),(interval 14,16)])
 
 -- Inspector O'Hare implemented match as follows:
 match :: Histogram -> SigCard -> Verdict
