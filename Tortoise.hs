@@ -80,12 +80,10 @@ prop_inOneInterval x y = y /= intervalOf x ==> x `inside` y == False
 histogram :: [(Interval, Count)] -> Histogram
 histogram xs = Histogram $ sortIntervals $ removeDups $ removeNones xs
  where
-  sortIntervals ys = sortBy (compare `on` fst) ys
-  removeNones   ys = filter (\t -> (snd t) > 0) ys
-  removeDups    ys = nubFst ys
-   where
-    nubFst []       = []
-    nubFst (x : xs) = x : nubFst (filter (\t -> (fst t) /= (fst x)) xs) -- check this
+  sortIntervals       = sortBy (compare `on` fst)
+  removeNones         = filter (\t -> (snd t) > 0)
+  removeDups []       = []
+  removeDups (x : xs) = x : removeDups (filter (\t -> (fst t) /= (fst x)) xs)
 
 
 -- every interval occur at most once
@@ -109,22 +107,28 @@ process xs = histogram $ countIntervals $ groupIntervals xs
   countIntervals ys = map (\l -> (head l, toInteger $ length l)) ys
 
 merge :: Histogram -> Histogram -> Histogram
-merge = notImpl "merge"
+merge xs ys = histogram $ map combineIntervals $ groupByInterval $ sortIntervals $ combineHists xs ys
+ where
+  deconstructHist (Histogram h) = h
+  combineHists g h = ((deconstructHist g) ++ (deconstructHist h))
+  sortIntervals = sortBy (compare `on` fst)
+  groupByInterval = groupBy (\a b -> fst a == fst b)
+  combineIntervals l = (fst $ head l, sum $ map snd l)
 
 prop_mergeAssoc :: Histogram -> Histogram -> Histogram -> Bool
-prop_mergeAssoc = notImpl "prop_mergeAssoc"
+prop_mergeAssoc g h i = merge g (merge h i) == merge (merge g h) i
 
 prop_mergeId :: Histogram -> Bool
-prop_mergeId = notImpl "prop_mergeId"
+prop_mergeId g = merge g mempty == g
 
 prop_mergeComm :: Histogram -> Histogram -> Bool
-prop_mergeComm = notImpl "prop_mergeComm"
+prop_mergeComm g h = merge g h == merge h g
 
 instance Semigroup Histogram where
-  (<>) = notImpl "<> for Histogram"
+  (<>) = merge
 instance Monoid Histogram where
-  mappend = notImpl "mappend for Histogram"
-  mempty = notImpl "mempty for Histogram"
+  mappend = (<>)
+  mempty = histogram []
 
 -- Problem 4
 
