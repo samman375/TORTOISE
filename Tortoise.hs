@@ -31,7 +31,7 @@ instance Arbitrary Freq where
   arbitrary = freq <$> arbitrary
 
 instance Arbitrary Interval where
-  -- arbitrary = interval <$> (arbitrary :: Gen (Large Int)) -- Large 3141
+  -- arbitrary = interval <$> deconstructLargeInt (arbitrary :: Gen (Large Int)) -- Large 3141
   arbitrary = interval <$> arbitrary
 
 instance Arbitrary Histogram where
@@ -59,6 +59,9 @@ extractFreq (Freq n) = n
 
 deconstructHist :: Histogram -> [(Interval, Count)]
 deconstructHist (Histogram h) = h
+
+-- deconstructLargeInt :: Gen (Large Int) -> Int
+-- deconstructLargeInt Gen (Large n) = n
 
 -- ASSIGNMENT STARTS HERE --
 
