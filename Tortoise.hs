@@ -13,7 +13,7 @@ data Freq = Freq Int deriving (Show, Eq, Ord)
 data Interval = Interval Int deriving (Eq, Ord)
 
 instance Show Interval where
-  show a = show (startPoint a) ++ " to " ++ show (endPoint a)
+  show a = show (extractFreq $ startPoint a) ++ " to " ++ show (extractFreq $ endPoint a)
 
 type Count = Integer
 data Histogram = Histogram [(Interval, Count)] deriving (Show, Eq)
@@ -54,6 +54,9 @@ freq n = Freq (abs n)
 interval :: Int -> Interval
 interval n = Interval (abs n)
 
+extractFreq :: Freq -> Int
+extractFreq (Freq n) = n
+
 -- ASSIGNMENT STARTS HERE --
 
 -- Problem 1
@@ -78,11 +81,12 @@ histogram :: [(Interval, Count)] -> Histogram
 histogram xs = Histogram $ sortIntervals $ removeDups $ removeNones xs
  where
   sortIntervals ys = sortBy (compare `on` fst) ys
-  removeNones ys = filter (\t -> (snd t) > 0) ys
-  removeDups ys = nubFst ys
+  removeNones   ys = filter (\t -> (snd t) > 0) ys
+  removeDups    ys = nubFst ys
    where
     nubFst []       = []
     nubFst (x : xs) = x : nubFst (filter (\t -> (fst t) /= (fst x)) xs) -- check this
+
 
 -- every interval occur at most once
 prop_histogram1 :: Histogram -> Bool
@@ -98,37 +102,11 @@ prop_histogram3 (Histogram xs) = sort (map fst xs) == map fst xs
 
 -- Problem 3
 
--- intervalOf
--- add interval to list or increase count of interval
--- convert to histogram
 process :: [Freq] -> Histogram
-process xs = histogram (map (\a -> incrInterval a l) intervals)
+process xs = histogram $ countIntervals $ groupIntervals xs
  where
-  l = []
-  intervals = map intervalOf xs
-  -- group + length
-
-  -- add interval to on-going list
-  incrInterval :: Interval -> [(Interval, Count)] -> [(Interval, Count)]
-  incrInterval i list
-    | (length list) == 0 || i `elem` (map fst list) = map (\x -> if fst x == i then (\a -> a + 1) (snd x) else x) list
-    | otherwise = list ++ [(i, 1)]
-
--- Attempt 1:
-
---   histogram $ (foldr incrInterval (freqsToIntervals xs) [])
---  where
---   freqsToIntervals :: [Freq] -> [Interval]
---   freqsToIntervals fs = map intervalOf fs
-
---   -- map incrInterval (freqsToIntervals xs) incrInterval
---   -- foldr incrInterval [] (freqsToIntervals xs)
-
---   -- Given an interval and list if interval in list then incr, else add to list
---   incrInterval :: Interval -> [(Interval, Count)] -> [(Interval, Count)]
---   incrInterval i list
---     | i `elem` (map fst list) = map (\x -> if fst x == i then inc (snd x) else x) list
---     | otherwise = list ++ (i, Count 1)
+  groupIntervals ys = group $ sort $ map intervalOf ys
+  countIntervals ys = map (\l -> (head l, toInteger $ length l)) ys
 
 merge :: Histogram -> Histogram -> Histogram
 merge = notImpl "merge"
@@ -149,6 +127,9 @@ instance Monoid Histogram where
   mempty = notImpl "mempty for Histogram"
 
 -- Problem 4
+
+-- eucDistance :: Histogram -> Histogram -> Float
+-- eucDistance g h = 
 
 report_refl :: Maybe Histogram
 report_refl = notImpl "report_refl"
@@ -189,3 +170,4 @@ refCard = SigCard (histogram r) v
 
 falsePos :: Histogram
 falsePos = notImpl "falsePos"
+-- int overflow
